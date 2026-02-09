@@ -1,62 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M3U8 Player</title>
-
-  <!-- HLS.js -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.5"></script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 20px auto;
-      background: #f5f5f5;
-    }
-    .player-box {
-      background: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    video {
-      width: 100%;
-      background: #000;
-      border-radius: 5px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M3U8 Player</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.5"></script>
+<style>
+body { max-width: 800px; margin:20px auto; font-family:Arial; background:#f5f5f5;}
+.player-container{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+video{width:100%;border-radius:5px;background:black;}
+select,button{padding:8px 12px;margin:5px;border-radius:5px;border:1px solid #ccc;}
+button{background:#0070f3;color:#fff;border:none;cursor:pointer;}
+button:hover{background:#0051cc;}
+</style>
 </head>
-
 <body>
+<div class="player-container">
+<h2>🎬 M3U8 Player</h2>
+<select id="channelSelect">
+<option value="a05l">Channel a05l</option>
+<!-- নতুন channel add করতে চাইলে এখানে add করুন -->
+</select>
+<button id="loadBtn">Load Video</button>
+<video id="videoPlayer" controls autoplay muted></video>
+</div>
 
-  <div class="player-box">
-    <h3>🎬 Live Stream Player</h3>
-    <video id="video" controls autoplay muted></video>
-  </div>
+<script>
+const video = document.getElementById('videoPlayer');
+const select = document.getElementById('channelSelect');
+const loadBtn = document.getElementById('loadBtn');
 
-  <script>
-    // Auto detect domain (Vercel)
-    const baseUrl = window.location.origin;
+// Vercel deployed proxy URL
+const VERCEL_URL = 'https://m3u8-proxy-vercel.vercel.app';
+let hls = null;
 
-    // Proxy stream URL (dynamic)
-    const streamUrl = `${baseUrl}/stream/play/a05l/index.m3u8`;
+function loadVideo(){
+  const channel = select.value;
+  const streamUrl = `${VERCEL_URL}/stream/play/${channel}/index.m3u8`;
+  console.log('Loading:', streamUrl);
 
-    const video = document.getElementById('video');
-    let hls;
+  if(Hls.isSupported()){
+    if(hls) hls.destroy();
+    hls = new Hls();
+    hls.loadSource(streamUrl);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, ()=>video.play());
+    hls.on(Hls.Events.ERROR,(event,data)=>console.error('HLS Error:',data));
+  } else if(video.canPlayType('application/vnd.apple.mpegurl')){
+    video.src = streamUrl;
+    video.play();
+  } else alert('HLS not supported in your browser');
+}
 
-    if (Hls.isSupported()) {
-      hls = new Hls();
-      hls.loadSource(streamUrl);
-      hls.attachMedia(video);
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari support
-      video.src = streamUrl;
-    } else {
-      alert('Your browser does not support HLS');
-    }
-  </script>
-
+loadBtn.addEventListener('click',loadVideo);
+window.addEventListener('DOMContentLoaded', loadVideo);
+</script>
 </body>
 </html>
