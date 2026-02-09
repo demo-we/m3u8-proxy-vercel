@@ -1,0 +1,17 @@
+{
+  "functions": {
+    "api/proxy.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/play/(.*)",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/stream/(.*)",
+      "destination": "/api/stream.js"
+    }
+  ]
+}
